@@ -30,17 +30,6 @@ class MainActivity : AppCompatActivity() {
         boardView.setOnTouchListener(this::handleTouch)
         bRestart.setOnClickListener(this::restartGame)
 
-        // Read the game that was saved.  If not game exists,
-        // this function will initialize the game.
-        loadGame()
-    }
-
-    /* Called if the user is leaving the app for any reason.  We will save
-       the game just in case the user is closing the app.
-     */
-    override fun onPause() {
-        super.onPause()
-        saveGame()
     }
 
     /* Respond to touch on the board view.  Determine the position in the grid,
@@ -120,21 +109,21 @@ class MainActivity : AppCompatActivity() {
     /* Save the game including the pieces on the board and the current state of 'turn' */
     private fun saveGame() {
         Log.d("Debug","saveGame called")
-
-
-
+        val sharedPref = getSharedPreferences("game_data", Context.MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.putString("turn",turn.text)
         for (position in 0..8) {
-
+            editor.putString("pos_$position",boardView.getPiece(position).text)
         }
-
+        editor.apply()
     }
 
     /* Load the game.  If there was no saved game, then initialize the game.  */
     private fun loadGame() {
         Log.d("Debug","loadGame called")
-
+        val sharedPref = getSharedPreferences("game_data", Context.MODE_PRIVATE)
         // Convert the string 'turn' to the enum value
-        turn = when ("") {
+        turn = when (sharedPref.getString("turn", "UNKNOWN")) {
             "X"     -> Piece.X
             "O"     -> Piece.O
             "EMPTY" -> Piece.EMPTY   // Game must be in the "Game Over" state
@@ -142,7 +131,7 @@ class MainActivity : AppCompatActivity() {
         }
         for (position in 0..8) {
             // Convert the string 'pos_#" to the enum value
-            when ("") {
+            when (sharedPref.getString("pos_$position", "UNKNOWN")) {
                 "X"  -> boardView.changePiece(position,Piece.X)
                 "O"  -> boardView.changePiece(position,Piece.O)
                 else -> boardView.changePiece(position,Piece.EMPTY) // Saved empty or no saved game
